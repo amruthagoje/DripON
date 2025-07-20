@@ -8,7 +8,8 @@ import { z } from 'zod';
 
 import { useToast } from "@/hooks/use-toast";
 import type { CapturedItem } from '@/lib/types';
-import { handleGestureTransfer, transferSchema } from '@/lib/actions';
+import { handleGestureTransfer } from '@/lib/actions';
+import { transferSchema } from '@/lib/schemas';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
