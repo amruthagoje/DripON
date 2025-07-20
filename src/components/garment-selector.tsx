@@ -39,7 +39,7 @@ export default function GarmentSelector({
                 key={garment.id}
                 onClick={() => onSelectGarment(garment)}
                 className={cn(
-                  'relative aspect-square rounded-lg overflow-hidden focus:outline-none transition-all duration-300 ring-offset-background ring-offset-2 focus:ring-2 ring-accent',
+                  'relative aspect-[2/3] rounded-lg overflow-hidden focus:outline-none transition-all duration-300 ring-offset-background ring-offset-2 focus:ring-2 ring-accent',
                   selectedGarment?.id === garment.id ? 'ring-2 ring-primary' : 'hover:opacity-80'
                 )}
                 aria-label={`Select ${garment.name}`}

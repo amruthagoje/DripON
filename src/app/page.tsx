@@ -13,7 +13,9 @@ const garments: Garment[] = [
   { id: 3, name: 'Gravity Boots', image: 'https://placehold.co/400x600.png', 'data-ai-hint': 'boots sci-fi' },
   { id: 4, name: 'Stealth Suit', image: 'https://placehold.co/400x600.png', 'data-ai-hint': 'bodysuit stealth' },
   { id: 5, name: 'Neon Visor', image: 'https://placehold.co/400x600.png', 'data-ai-hint': 'visor neon' },
-  { id: 6, name: 'T-Shirt', image: 'https://placehold.co/400x600.png', 'data-ai-hint': 't-shirt simple' },
+  { id: 6, name: 'Yellow T-Shirt', image: 'https://placehold.co/400x600.png', 'data-ai-hint': 'yellow t-shirt' },
+  { id: 7, name: 'Pink T-Shirt', image: 'https://placehold.co/400x600.png', 'data-ai-hint': 'pink t-shirt' },
+  { id: 8, name: 'Black T-Shirt', image: 'https://placehold.co/400x600.png', 'data-ai-hint': 'black t-shirt' },
 ];
 
 export default function Home() {
