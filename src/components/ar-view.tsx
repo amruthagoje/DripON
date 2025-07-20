@@ -53,7 +53,7 @@ export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
   return (
     <div className="relative w-full">
       <Card className="w-full aspect-[9/16] max-h-[75vh] overflow-hidden relative shadow-lg flex items-center justify-center">
-        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover z-0" autoPlay muted playsInline />
+        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay muted playsInline />
         
         {hasCameraPermission === false && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4 z-30">
@@ -63,28 +63,30 @@ export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
             </div>
         )}
         
-        <AnimatePresence>
-          {selectedGarment && (
-            <motion.div
-              key={selectedGarment.id}
-              initial={{ opacity: 0, scale: 0.8, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -50 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none z-10"
-            >
-              <Image
-                src={selectedGarment.image}
-                alt={selectedGarment.name}
-                width={400}
-                height={600}
-                style={{objectFit: "contain"}}
-                className="drop-shadow-2xl"
-                data-ai-hint={selectedGarment['data-ai-hint']}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <AnimatePresence>
+            {selectedGarment && (
+              <motion.div
+                key={selectedGarment.id}
+                initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -50 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute inset-0 flex items-center justify-center p-8"
+              >
+                <Image
+                  src={selectedGarment.image}
+                  alt={selectedGarment.name}
+                  width={400}
+                  height={600}
+                  style={{objectFit: "contain"}}
+                  className="drop-shadow-2xl"
+                  data-ai-hint={selectedGarment['data-ai-hint']}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {hasCameraPermission === false && (
             <div className="absolute bottom-4 left-4 right-4 z-20">
