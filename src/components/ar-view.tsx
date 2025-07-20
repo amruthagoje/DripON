@@ -52,11 +52,11 @@ export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
 
   return (
     <div className="relative w-full">
-      <Card className="w-full aspect-[9/16] max-h-[75vh] overflow-hidden relative shadow-lg bg-muted/30 flex items-center justify-center">
+      <Card className="w-full aspect-[9/16] max-h-[75vh] overflow-hidden relative shadow-lg flex items-center justify-center">
         <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover z-0" autoPlay muted playsInline />
         
         {hasCameraPermission === false && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4 z-10">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4 z-30">
                 <VideoOff className="h-16 w-16 mb-4" />
                 <h3 className="text-xl font-bold">Camera permission denied</h3>
                 <p className="text-center">Please enable camera access in your browser to continue.</p>
