@@ -25,14 +25,7 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
   };
 
   const handleDownloadClick = (item: CapturedItem) => {
-    // Create a temporary link element to trigger the download
-    const link = document.createElement('a');
-    link.href = item.thumbnail;
-    // Suggest a filename for the download
-    link.download = `virtustyle-capture-${item.id}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.open(item.thumbnail, '_blank');
   };
 
 
