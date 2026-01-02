@@ -1,0 +1,249 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the VirtuStyle application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user.",
+          "format": "uuid"
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time the user was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "createdAt"
+      ]
+    },
+    "VirtualGarment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VirtualGarment",
+      "type": "object",
+      "description": "Represents a virtual garment that can be tried on in the AR experience.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the virtual garment.",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the virtual garment."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the virtual garment."
+        },
+        "modelUrl": {
+          "type": "string",
+          "description": "URL to the 3D model of the garment.",
+          "format": "uri"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to the image of the garment.",
+          "format": "uri"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the garment (e.g., shirt, pants, dress)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "modelUrl",
+        "imageUrl",
+        "category"
+      ]
+    },
+    "CapturedMedia": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CapturedMedia",
+      "type": "object",
+      "description": "Represents a captured photo or video from the virtual try-on experience.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the captured media.",
+          "format": "uuid"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N CapturedMedia)"
+        },
+        "mediaType": {
+          "type": "string",
+          "description": "The type of media (e.g., photo, video)."
+        },
+        "mediaUrl": {
+          "type": "string",
+          "description": "URL to the captured media file.",
+          "format": "uri"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The date and time the media was captured.",
+          "format": "date-time"
+        },
+        "garmentId": {
+          "type": "string",
+          "description": "Reference to VirtualGarment. (Relationship: VirtualGarment 1:N CapturedMedia)"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "mediaType",
+        "mediaUrl",
+        "timestamp",
+        "garmentId"
+      ]
+    },
+    "GestureTransfer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "GestureTransfer",
+      "type": "object",
+      "description": "Represents a gesture-based transfer of media between devices.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the gesture transfer.",
+          "format": "uuid"
+        },
+        "senderId": {
+          "type": "string",
+          "description": "Reference to User who initiated the transfer (sender). (Relationship: User 1:N GestureTransfer as Sender)"
+        },
+        "receiverId": {
+          "type": "string",
+          "description": "Reference to User who received the transfer (receiver). (Relationship: User 1:N GestureTransfer as Receiver)"
+        },
+        "mediaId": {
+          "type": "string",
+          "description": "Reference to CapturedMedia being transferred. (Relationship: CapturedMedia 1:N GestureTransfer)"
+        },
+        "gestureType": {
+          "type": "string",
+          "description": "The type of gesture used to initiate the transfer."
+        },
+        "transferStatus": {
+          "type": "string",
+          "description": "The status of the transfer (e.g., pending, completed, failed)."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The date and time the transfer was initiated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "senderId",
+        "receiverId",
+        "mediaId",
+        "gestureType",
+        "transferStatus",
+        "timestamp"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles.  Path-based ownership ensures only the user can read/write their own profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/capturedMedia/{mediaId}",
+        "definition": {
+          "entityName": "CapturedMedia",
+          "schema": {
+            "$ref": "#/backend/entities/CapturedMedia"
+          },
+          "description": "Stores captured media (photos, videos) for each user. Path-based ownership enables simple security rules. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "mediaId",
+              "description": "The unique identifier of the captured media."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/virtualGarments/{garmentId}",
+        "definition": {
+          "entityName": "VirtualGarment",
+          "schema": {
+            "$ref": "#/backend/entities/VirtualGarment"
+          },
+          "description": "Stores virtual garment information.  Accessible to all users for reading.",
+          "params": [
+            {
+              "name": "garmentId",
+              "description": "The unique identifier of the virtual garment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/gestureTransfers/{transferId}",
+        "definition": {
+          "entityName": "GestureTransfer",
+          "schema": {
+            "$ref": "#/backend/entities/GestureTransfer"
+          },
+          "description": "Stores gesture transfer requests. SenderId and ReceiverId are used in rules to control access. Does not denormalize any additional authorization data.",
+          "params": [
+            {
+              "name": "transferId",
+              "description": "The unique identifier of the gesture transfer."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the VirtuStyle application's core features, including AR-based virtual try-on, media capture, and gesture-based media transfer. The structure prioritizes authorization independence, clarity, and scalability.\n\nUsers are stored in a top-level `users` collection. Captured media is stored in subcollections under each user's document (`/users/{userId}/capturedMedia/{mediaId}`). This path-based ownership ensures that only the user can access their own captured media.  The `CapturedMedia` documents include the `garmentId` to link back to the `VirtualGarment` collection.\n\nVirtual garments are stored in a top-level `virtualGarments` collection, which is accessible to all users (for reading) to populate the AR try-on experience.  A security rule can limit write access to authorized admins.\n\nGesture transfers are stored in a top-level `gestureTransfers` collection. Each document contains the `senderId`, `receiverId`, and `mediaId`. This structure allows for querying transfers initiated or received by a specific user.  A membership map is not needed because security rules will ensure the sender and receiver have read access to only the transfers involving them.\n\n**Authorization Independence**: The structure achieves authorization independence by avoiding hierarchical `get()` calls in security rules. User-owned data (captured media) is stored in subcollections under the user's document, eliminating the need to fetch user data to authorize access to the media. The `CapturedMedia` documents themselves contain the necessary information for authorization, such as the `userId`.\n\n**QAPs (Rules are not Filters)**: The structure supports secure `list` operations. Path-based ownership for captured media enables listing only the current user's media.  The separation of virtual garments (public read) and user-specific data (private read/write) ensures that `list` operations are secure and efficient. The `gestureTransfers` collection can be secured by ensuring that only transfers where the `senderId` or `receiverId` matches the authenticated user's ID can be read."
+  }
+}

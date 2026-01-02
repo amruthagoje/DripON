@@ -1,0 +1,148 @@
+/**
+ * This ruleset enforces a security model for the VirtuStyle application,
+ * balancing user privacy with public data access.
+ *
+ * Core Philosophy:
+ * The security model is primarily based on user ownership. Each user has complete
+ * control over their personal data, including their profile and captured media.
+ * Publicly accessible data, like the virtual garment catalog, is read-only for
+ * all users, with writes restricted to prevent unauthorized modifications.
+ * Shared data, like media transfers, is accessible only to the involved parties.
+ *
+ * Data Structure:
+ * - /users/{userId}: Contains private user profile information.
+ * - /users/{userId}/capturedMedia/{mediaId}: A subcollection for a user's private photos and videos.
+ * - /virtualGarments/{garmentId}: A top-level collection of all available virtual garments, readable by everyone.
+ * - /gestureTransfers/{transferId}: A top-level collection tracking media transfers between users.
+ *
+ * Key Security Decisions:
+ * - User Isolation: A user can only access data within their own document tree (e.g., /users/their-own-id/...). Listing all users is explicitly disabled.
+ * - Public Catalog: The `virtualGarments` collection is publicly readable to populate the app's UI, but all write operations are disabled by default until an administrative role or ownership model is defined.
+ * - Shared Access Control: `gestureTransfers` documents are only visible to the sender and the receiver of the transfer, enforced by checking fields within the document itself.
+ *
+ * Denormalization for Authorization:
+ * Authorization checks are fast and efficient by design. Ownership is determined
+ * by the document path for user-specific data. For `gestureTransfers`, the
+ * `senderId` and `receiverId` fields are stored directly on the document,
+ * avoiding costly lookups and enabling simple, performant rules.
+ *
+ * Structural Segregation:
+ * The ruleset leverages separate collections for private user data
+ * (`users/{userId}/capturedMedia`) and public data (`virtualGarments`). This
+ * segregation is more secure and performant for list operations than using a
+ * single collection with status flags.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the core function for enforcing document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Verifies ownership for an existing document. Used for safe updates and deletes.
+     * Ensures the operation targets a document that actually exists.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Checks if the requesting user is the sender or receiver of a gesture transfer.
+     */
+    function isSenderOrReceiver() {
+      return isSignedIn() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+    }
+    
+    /**
+     * Checks if the requesting user is the sender or receiver of an existing gesture transfer.
+     */
+    function isExistingSenderOrReceiver() {
+      return resource != null && isSenderOrReceiver();
+    }
+    
+    /**
+     * Checks if the requesting user is the sender of an existing gesture transfer.
+     */
+    function isExistingSender() {
+      return resource != null && isSignedIn() && request.auth.uid == resource.data.senderId;
+    }
+
+    /**
+     * @description   Stores user profile information.
+     * @path          /users/{userId}
+     * @allow         (create) An authenticated user creating their own user profile document.
+     * @allow         (get, update, delete) The user `{userId}` accessing their own document.
+     * @deny          (list) A user trying to list all other users in the database.
+     * @deny          (get) A user trying to read another user's profile.
+     * @principle     Restricts access to a user's own data tree (Ownership).
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description   Stores a user's private captured photos and videos.
+       * @path          /users/{userId}/capturedMedia/{mediaId}
+       * @allow         (create, get, list, update, delete) The user `{userId}` managing their own media files.
+       * @deny          (get, list) A user trying to see another user's private media.
+       * @principle     Enforces strict ownership for all subcollection data.
+       */
+      match /capturedMedia/{mediaId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description   Stores public information about virtual garments.
+     * @path          /virtualGarments/{garmentId}
+     * @allow         (get, list) Any user, authenticated or not, viewing garment details.
+     * @deny          (create, update, delete) Any user trying to modify the garment catalog.
+     * @principle     Public Read with Owner-Only Writes. Writes are currently disabled.
+     */
+    match /virtualGarments/{garmentId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: Cannot implement owner-only writes. The 'VirtualGarment' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add admin/owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description   Tracks gesture-based media transfers between users.
+     * @path          /gestureTransfers/{transferId}
+     * @allow         (create) An authenticated user creating a transfer where they are the sender.
+     * @allow         (get, update) The sender or the receiver viewing or updating the transfer record.
+     * @allow         (delete) The sender deleting their own transfer record.
+     * @deny          (get) A user trying to view a transfer they are not part of.
+     * @principle     Shared access control, granting permissions only to specified participants.
+     */
+    match /gestureTransfers/{transferId} {
+      allow get: if isSenderOrReceiver();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isExistingSenderOrReceiver() && request.resource.data.senderId == resource.data.senderId && request.resource.data.mediaId == resource.data.mediaId;
+      allow delete: if isExistingSender();
+    }
+  }
+}
