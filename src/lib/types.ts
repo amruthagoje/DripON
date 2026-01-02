@@ -8,5 +8,5 @@ export interface Garment {
 export interface CapturedItem {
   id: number;
   type: 'photo' | 'video';
-  thumbnail: string;
+  url: string; // Changed from thumbnail to url to store data URL
 }
