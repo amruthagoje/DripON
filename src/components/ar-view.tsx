@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 
 interface ARViewProps {
   selectedGarment: Garment | null;
-  onCapture: (type: 'photo' | 'video', dataUrl: string) => void;
+  onCapture: (dataUrl: string, type: 'photo' | 'video') => void;
 }
 
 export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
@@ -54,16 +54,64 @@ export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
   }, [toast]);
   
   const takePhoto = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || !selectedGarment) return;
+  
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg');
-    onCapture('photo', dataUrl);
-  }
+  
+    // Draw the video frame
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+    // Create an Image element for the garment
+    const garmentImage = new window.Image();
+    garmentImage.crossOrigin = 'anonymous'; // Handle potential CORS issues
+    garmentImage.src = selectedGarment.image;
+  
+    garmentImage.onload = () => {
+      // Calculate aspect ratios
+      const videoAspectRatio = canvas.width / canvas.height;
+      const garmentAspectRatio = garmentImage.width / garmentImage.height;
+  
+      let drawWidth, drawHeight, x, y;
+  
+      // This logic tries to replicate `object-fit: contain`
+      if (videoAspectRatio > garmentAspectRatio) {
+        // Video is wider than garment image
+        drawHeight = canvas.height * 0.8; // Use 80% of video height
+        drawWidth = drawHeight * garmentAspectRatio;
+      } else {
+        // Video is taller or same aspect ratio
+        drawWidth = canvas.width * 0.8; // Use 80% of video width
+        drawHeight = drawWidth / garmentAspectRatio;
+      }
+      
+      // Center the image
+      x = (canvas.width - drawWidth) / 2;
+      y = (canvas.height - drawHeight) / 2;
+  
+      // Draw the garment image on top
+      ctx.drawImage(garmentImage, x, y, drawWidth, drawHeight);
+  
+      // Get the final image
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      onCapture(dataUrl, 'photo');
+    };
+
+    garmentImage.onerror = () => {
+      // Fallback to just video if garment fails to load
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      onCapture(dataUrl, 'photo');
+      toast({
+        variant: 'destructive',
+        title: 'Could not load garment image.',
+        description: 'Captured video frame without overlay.',
+      });
+    }
+  };
 
   const handleVideoClick = () => {
     if (isRecording) {
@@ -89,7 +137,7 @@ export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
         const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
         const reader = new FileReader();
         reader.onload = () => {
-          onCapture('video', reader.result as string);
+          onCapture(reader.result as string, 'video');
         };
         reader.readAsDataURL(blob);
         recordedChunksRef.current = [];
