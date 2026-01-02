@@ -1,0 +1,44 @@
+{
+  "picsum_images": {
+    "cyberpunk_jacket": {
+      "src": "https://picsum.photos/seed/jacket/400/600",
+      "width": 400,
+      "height": 600
+    },
+    "holo_dress": {
+      "src": "https://picsum.photos/seed/dress/400/600",
+      "width": 400,
+      "height": 600
+    },
+    "gravity_boots": {
+      "src": "https://picsum.photos/seed/boots/400/600",
+      "width": 400,
+      "height": 600
+    },
+    "stealth_suit": {
+      "src": "https://picsum.photos/seed/suit/400/600",
+      "width": 400,
+      "height": 600
+    },
+    "neon_visor": {
+      "src": "https://picsum.photos/seed/visor/400/600",
+      "width": 400,
+      "height": 600
+    },
+    "yellow_shirt": {
+      "src": "https://picsum.photos/seed/yellow_shirt/400/600",
+      "width": 400,
+      "height": 600
+    },
+    "pink_shirt": {
+      "src": "https://picsum.photos/seed/pink_shirt/400/600",
+      "width": 400,
+      "height": 600
+    },
+    "black_shirt": {
+      "src": "https://picsum.photos/seed/black_shirt/400/600",
+      "width": 400,
+      "height": 600
+    }
+  }
+}
