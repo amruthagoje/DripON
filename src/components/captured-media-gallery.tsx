@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useTransition } from 'react';
@@ -18,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Share2, ImageIcon, VideoIcon } from 'lucide-react';
+import { Loader2, Share2, Eye, ImageIcon, VideoIcon } from 'lucide-react';
 
 
 interface CapturedMediaGalleryProps {
@@ -28,7 +29,8 @@ interface CapturedMediaGalleryProps {
 export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CapturedItem | null>(null);
   const [mediaData, setMediaData] = useState<string>('');
 
@@ -54,14 +56,19 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
         reader.onerror = reject;
         reader.readAsDataURL(blob);
       }));
+  
+  const handleViewClick = (item: CapturedItem) => {
+    setSelectedItem(item);
+    setViewDialogOpen(true);
+  };
 
   const handleShareClick = async (item: CapturedItem) => {
     setSelectedItem(item);
-    setDialogOpen(true);
+    setShareDialogOpen(true);
+    setMediaData('');
     
     startTransition(async () => {
       try {
-        // Use a placeholder for the data URL generation to avoid hitting network
         const dataUri = await toDataURL(item.thumbnail);
         setMediaData(dataUri);
       } catch (error) {
@@ -71,7 +78,7 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
             title: "Error preparing media",
             description: "Could not prepare the media for transfer.",
         });
-        setDialogOpen(false);
+        setShareDialogOpen(false);
       }
     });
   };
@@ -99,7 +106,7 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
           title: "Transfer Initiated",
           description: result.success,
         });
-        setDialogOpen(false);
+        setShareDialogOpen(false);
         form.reset();
       }
     });
@@ -123,12 +130,20 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
               {items.map((item) => (
                 <div key={item.id} className="relative group aspect-square">
                   <Image src={item.thumbnail} alt={`Captured ${item.type}`} layout="fill" objectFit="cover" className="rounded-md" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-md">
-                    {item.type === 'photo' ? <ImageIcon className="h-6 w-6 text-white mb-2" /> : <VideoIcon className="h-6 w-6 text-white mb-2" />}
-                    <Button size="sm" onClick={() => handleShareClick(item)} disabled={isPending}>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </Button>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-md gap-2">
+                    <div className="flex items-center justify-center">
+                      {item.type === 'photo' ? <ImageIcon className="h-6 w-6 text-white" /> : <VideoIcon className="h-6 w-6 text-white" />}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleViewClick(item)} variant="secondary">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button size="sm" onClick={() => handleShareClick(item)} disabled={isPending}>
+                        <Share2 className="h-4 w-4 mr-1" />
+                        Share
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -136,7 +151,9 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
           )}
         </CardContent>
       </Card>
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Transfer via Gesture</DialogTitle>
@@ -144,7 +161,7 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
               Select a gesture and enter a destination device ID to transfer the media.
             </DialogDescription>
           </DialogHeader>
-          { (isPending && !mediaData) ? (
+          { isPending && !mediaData ? (
             <div className="flex items-center justify-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary"/>
                 <p className="ml-4">Preparing media...</p>
@@ -198,6 +215,28 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* View Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Captured {selectedItem?.type}</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+             <div className="relative aspect-[9/16] w-full mx-auto">
+                <Image 
+                    src={selectedItem.thumbnail} 
+                    alt={`Captured ${selectedItem.type}`} 
+                    layout="fill"
+                    objectFit="contain"
+                    className="rounded-md"
+                />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
+
+    
