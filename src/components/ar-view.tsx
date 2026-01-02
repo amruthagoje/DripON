@@ -238,3 +238,5 @@ export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
     </div>
   );
 }
+
+    

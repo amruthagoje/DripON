@@ -47,9 +47,8 @@ export default function GarmentSelector({
                 <Image
                   src={garment.image}
                   alt={garment.name}
-                  layout="fill"
-                  objectFit="cover"
-                  className="transition-transform duration-300 group-hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                   data-ai-hint={garment['data-ai-hint']}
                 />
                 <div className="absolute inset-0 bg-black/20"></div>
@@ -64,3 +63,5 @@ export default function GarmentSelector({
     </Card>
   );
 }
+
+    
