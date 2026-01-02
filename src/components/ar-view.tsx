@@ -87,8 +87,11 @@ export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
 
       mediaRecorderRef.current.onstop = () => {
         const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        onCapture('video', url);
+        const reader = new FileReader();
+        reader.onload = () => {
+          onCapture('video', reader.result as string);
+        };
+        reader.readAsDataURL(blob);
         recordedChunksRef.current = [];
       };
 
@@ -108,28 +111,32 @@ export default function ARView({ selectedGarment, onCapture }: ARViewProps) {
     <div className="relative w-full">
       <Card className="w-full aspect-[9/16] max-h-[75vh] overflow-hidden relative shadow-lg flex items-center justify-center bg-muted">
         <div className="absolute inset-0">
-          {hasCameraPermission ? (
-            <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
-          ) : (
-            <Image
-              src={picsum_images.person_fallback.src}
-              alt="Person fallback"
-              fill
-              className="object-cover"
-              priority
-              data-ai-hint="person fashion"
-            />
+          {hasCameraPermission === null && (
+             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4 z-10">
+                <p>Requesting camera permission...</p>
+             </div>
           )}
+          <video ref={videoRef} className={cn("w-full h-full object-cover", hasCameraPermission ? 'opacity-100' : 'opacity-0')} autoPlay muted playsInline />
           {hasCameraPermission === false && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4 z-10">
-              <VideoOff className="h-16 w-16 mb-4" />
-              <h3 className="text-xl font-bold">Camera permission denied</h3>
-              <p className="text-center">Please enable camera access in your browser to continue.</p>
+            <div className='absolute inset-0'>
+                <Image
+                src={picsum_images.person_fallback.src}
+                alt="Person fallback"
+                fill
+                className="object-cover"
+                priority
+                data-ai-hint="person fashion"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4 z-10">
+                  <VideoOff className="h-16 w-16 mb-4" />
+                  <h3 className="text-xl font-bold">Camera permission denied</h3>
+                  <p className="text-center">Please enable camera access in your browser to continue.</p>
+                </div>
             </div>
           )}
         </div>
         
-        <div className="absolute inset-0 z-20 pointer-events-none">
+        <div className="absolute inset-0 z-10 pointer-events-none">
           <AnimatePresence>
             {selectedGarment && (
               <motion.div

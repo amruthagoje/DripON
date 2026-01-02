@@ -25,8 +25,6 @@ export default function Home() {
   const [capturedItems, setCapturedItems] = useState<CapturedItem[]>([]);
 
   const handleCapture = (type: 'photo' | 'video', dataUrl: string) => {
-    if (!selectedGarment) return;
-    
     const newItem: CapturedItem = {
       id: Date.now(),
       type: type,
