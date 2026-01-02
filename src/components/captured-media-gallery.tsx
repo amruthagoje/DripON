@@ -8,7 +8,7 @@ import type { CapturedItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, Eye, ImageIcon, VideoIcon } from 'lucide-react';
+import { Download, Eye, ImageIcon, VideoIcon, Share2 } from 'lucide-react';
 
 
 interface CapturedMediaGalleryProps {
@@ -27,7 +27,8 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
   const handleDownloadClick = (item: CapturedItem) => {
     const link = document.createElement('a');
     link.href = item.url;
-    link.download = `virtustyle-capture-${item.id}.${item.type === 'photo' ? 'jpg' : 'webm'}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -52,7 +53,7 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
               {items.map((item) => (
                 <div key={item.id} className="relative group aspect-square">
                   {item.type === 'photo' ? (
-                    <Image src={item.url} alt={`Captured ${item.type}`} layout="fill" objectFit="cover" className="rounded-md" />
+                    <img src={item.url} alt={`Captured ${item.type}`} className="w-full h-full object-cover rounded-md" />
                   ) : (
                     <video src={item.url} muted loop playsInline className="w-full h-full object-cover rounded-md" />
                   )}
