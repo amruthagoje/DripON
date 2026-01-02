@@ -76,17 +76,19 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
             <DialogTitle>Captured {selectedItem?.type}</DialogTitle>
           </DialogHeader>
           {selectedItem && (
-             <div className="relative aspect-[9/16] w-full mx-auto">
+             <div className="relative w-full">
                 {selectedItem.type === 'photo' ? (
-                    <Image 
-                        src={selectedItem.url} 
-                        alt={`Captured ${selectedItem.type}`} 
-                        layout="fill"
-                        objectFit="contain"
-                        className="rounded-md"
-                    />
+                  <Image
+                    src={selectedItem.url}
+                    alt={`Captured ${selectedItem.type}`}
+                    width={0}
+                    height={0}
+                    sizes="100vw"
+                    style={{ width: '100%', height: 'auto', objectFit: 'contain' }}
+                    className="rounded-md"
+                  />
                 ) : (
-                    <video src={selectedItem.url} controls autoPlay className="w-full h-full rounded-md" />
+                    <video src={selectedItem.url} controls autoPlay className="w-full h-auto rounded-md" />
                 )}
             </div>
           )}
