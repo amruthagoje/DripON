@@ -4,6 +4,10 @@
 import { gestureBasedMediaTransfer } from '@/ai/flows/gesture-recognition';
 import { z } from 'zod';
 import { transferSchema } from '@/lib/schemas';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase';
+
 
 export async function handleGestureTransfer(
     mediaDataUri: string,

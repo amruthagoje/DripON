@@ -8,14 +8,16 @@ import type { CapturedItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, Eye, ImageIcon, VideoIcon, Share2 } from 'lucide-react';
+import { Download, Eye, ImageIcon, VideoIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 interface CapturedMediaGalleryProps {
   items: CapturedItem[];
+  isLoading: boolean;
 }
 
-export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProps) {
+export default function CapturedMediaGallery({ items, isLoading }: CapturedMediaGalleryProps) {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CapturedItem | null>(null);
   
@@ -26,7 +28,7 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
 
   const handleDownloadClick = (item: CapturedItem) => {
     const link = document.createElement('a');
-    link.href = item.url;
+    link.href = item.mediaUrl;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     document.body.appendChild(link);
@@ -43,7 +45,13 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
            <CardDescription>Download your virtual outfits.</CardDescription>
         </CardHeader>
         <CardContent>
-          {items.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-3 gap-2">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="aspect-square w-full" />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <p>No captures yet.</p>
               <p className="text-sm">Use the buttons below the AR view.</p>
@@ -52,14 +60,14 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
             <div className="grid grid-cols-3 gap-2">
               {items.map((item) => (
                 <div key={item.id} className="relative group aspect-square">
-                  {item.type === 'photo' ? (
-                    <img src={item.url} alt={`Captured ${item.type}`} className="w-full h-full object-cover rounded-md" />
+                  {item.mediaType === 'photo' ? (
+                    <img src={item.mediaUrl} alt={`Captured ${item.mediaType}`} className="w-full h-full object-cover rounded-md" />
                   ) : (
-                    <video src={item.url} muted loop playsInline className="w-full h-full object-cover rounded-md" />
+                    <video src={item.mediaUrl} muted loop playsInline className="w-full h-full object-cover rounded-md" />
                   )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center rounded-md gap-2">
                     <div className="flex items-center justify-center">
-                      {item.type === 'photo' ? <ImageIcon className="h-6 w-6 text-white" /> : <VideoIcon className="h-6 w-6 text-white" />}
+                      {item.mediaType === 'photo' ? <ImageIcon className="h-6 w-6 text-white" /> : <VideoIcon className="h-6 w-6 text-white" />}
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleViewClick(item)} variant="secondary">
@@ -83,14 +91,14 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Captured {selectedItem?.type}</DialogTitle>
+            <DialogTitle>Captured {selectedItem?.mediaType}</DialogTitle>
           </DialogHeader>
           {selectedItem && (
              <div className="relative w-full">
-                {selectedItem.type === 'photo' ? (
+                {selectedItem.mediaType === 'photo' ? (
                   <Image
-                    src={selectedItem.url}
-                    alt={`Captured ${selectedItem.type}`}
+                    src={selectedItem.mediaUrl}
+                    alt={`Captured ${selectedItem.mediaType}`}
                     width={0}
                     height={0}
                     sizes="100vw"
@@ -98,7 +106,7 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
                     className="rounded-md"
                   />
                 ) : (
-                    <video src={selectedItem.url} controls autoPlay className="w-full h-auto rounded-md" />
+                    <video src={selectedItem.mediaUrl} controls autoPlay className="w-full h-auto rounded-md" />
                 )}
             </div>
           )}

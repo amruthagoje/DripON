@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -84,8 +85,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the captured media.",
-          "format": "uuid"
+          "description": "Unique identifier for the captured media."
         },
         "userId": {
           "type": "string",
@@ -101,13 +101,21 @@
           "format": "uri"
         },
         "timestamp": {
-          "type": "string",
-          "description": "The date and time the media was captured.",
-          "format": "date-time"
+          "type": "object",
+          "description": "The date and time the media was captured (server timestamp)."
         },
         "garmentId": {
           "type": "string",
           "description": "Reference to VirtualGarment. (Relationship: VirtualGarment 1:N CapturedMedia)"
+        },
+         "garmentName": {
+          "type": "string",
+          "description": "The name of the virtual garment."
+        },
+        "garmentImage": {
+          "type": "string",
+          "description": "URL to the image of the garment.",
+          "format": "uri"
         }
       },
       "required": [
@@ -116,7 +124,9 @@
         "mediaType",
         "mediaUrl",
         "timestamp",
-        "garmentId"
+        "garmentId",
+        "garmentName",
+        "garmentImage"
       ]
     },
     "GestureTransfer": {

@@ -1,13 +1,16 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Garment, CapturedItem } from '@/lib/types';
 import Header from '@/components/header';
 import ARView from '@/components/ar-view';
 import GarmentSelector from '@/components/garment-selector';
 import CapturedMediaGallery from '@/components/captured-media-gallery';
 import { picsum_images } from '@/lib/placeholder-images.json';
+import { useAuth, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { initiateAnonymousSignIn, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 const garments: Garment[] = [
   { id: 1, name: 'Cyberpunk Jacket', image: picsum_images.cyberpunk_jacket.src, 'data-ai-hint': 'jacket cyberpunk' },
@@ -22,15 +25,36 @@ const garments: Garment[] = [
 
 export default function Home() {
   const [selectedGarment, setSelectedGarment] = useState<Garment | null>(null);
-  const [capturedItems, setCapturedItems] = useState<CapturedItem[]>([]);
+  
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [isUserLoading, user, auth]);
+  
+  const capturedMediaRef = useMemoFirebase(() => 
+    user ? collection(firestore, 'users', user.uid, 'capturedMedia') : null
+  , [user, firestore]);
+
+  const { data: capturedItems, isLoading: isLoadingCapturedItems } = useCollection<CapturedItem>(capturedMediaRef);
 
   const handleCapture = (dataUrl: string, type: 'photo' | 'video') => {
-    const newItem: CapturedItem = {
-      id: Date.now(),
-      type: type,
-      url: dataUrl
+    if (!user || !selectedGarment) return;
+
+    const newItem: Omit<CapturedItem, 'id'> = {
+      userId: user.uid,
+      mediaType: type,
+      mediaUrl: dataUrl,
+      timestamp: serverTimestamp(),
+      garmentId: selectedGarment.id.toString(),
+      garmentName: selectedGarment.name,
+      garmentImage: selectedGarment.image,
     };
-    setCapturedItems(prevItems => [newItem, ...prevItems]);
+    addDocumentNonBlocking(capturedMediaRef!, newItem);
   };
 
   return (
@@ -50,7 +74,7 @@ export default function Home() {
               onSelectGarment={setSelectedGarment} 
               selectedGarment={selectedGarment}
             />
-            <CapturedMediaGallery items={capturedItems} />
+            <CapturedMediaGallery items={capturedItems || []} isLoading={isLoadingCapturedItems} />
           </div>
         </div>
       </main>
