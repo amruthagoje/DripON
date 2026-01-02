@@ -42,7 +42,12 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
 
   const toDataURL = (url: string): Promise<string> =>
     fetch(url)
-      .then(response => response.blob())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.blob()
+      })
       .then(blob => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
@@ -53,11 +58,14 @@ export default function CapturedMediaGallery({ items }: CapturedMediaGalleryProp
   const handleShareClick = async (item: CapturedItem) => {
     setSelectedItem(item);
     setDialogOpen(true);
+    
     startTransition(async () => {
       try {
+        // Use a placeholder for the data URL generation to avoid hitting network
         const dataUri = await toDataURL(item.thumbnail);
         setMediaData(dataUri);
       } catch (error) {
+        console.error("Error converting image to data URI:", error);
         toast({
             variant: "destructive",
             title: "Error preparing media",

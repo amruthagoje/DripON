@@ -14,7 +14,7 @@ export async function handleGestureTransfer(
       return { error: 'Invalid input.' };
     }
 
-    if (!mediaDataUri || !mediaDataUri.startsWith('data:image')) {
+    if (!mediaDataUri || !(mediaDataUri.startsWith('data:image') || mediaDataUri.startsWith('data:video'))) {
         return { error: 'Valid media data is required.'}
     }
 
